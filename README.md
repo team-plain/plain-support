@@ -2,7 +2,7 @@
 
 A [Claude Code skill](https://docs.anthropic.com/en/docs/claude-code) that gives Claude direct access to the [Plain](https://plain.com) customer support platform via its GraphQL API.
 
-With this skill, Claude can read customers, threads, conversations, help center articles, and more — directly from your terminal.
+With this skill, Claude can read customers, threads, conversations, help center articles, and more - directly from your terminal.
 
 ## What can it do?
 
@@ -85,10 +85,6 @@ Claude will then have access to all Plain API commands. You can ask questions na
 |---------------------|----------|-------------|
 | `PLAIN_API_KEY` | Yes | Your Plain API key |
 | `PLAIN_API_URL` | No | Custom API endpoint (default: `https://core-api.uk.plain.com/graphql/v1`) |
-
-## API Reference
-
-For detailed documentation on all Plain entities (customers, threads, timeline entries, etc.), see [references/ENTITIES.md](.claude/skills/plain-support/references/ENTITIES.md).
 
 ## License
 
