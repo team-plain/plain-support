@@ -91,13 +91,6 @@ Claude will then have access to all Plain API commands. You can ask questions na
 - "Show me the timeline for thread th_01H..."
 - "Create a draft article about our refund policy"
 
-## Configuration
-
-| Environment Variable | Required | Description |
-|---------------------|----------|-------------|
-| `PLAIN_API_KEY` | Yes | Your Plain API key |
-| `PLAIN_API_URL` | No | Custom API endpoint (default: `https://core-api.uk.plain.com/graphql/v1`) |
-
 ## License
 
 MIT
