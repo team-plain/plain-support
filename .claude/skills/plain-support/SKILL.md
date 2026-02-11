@@ -1,5 +1,5 @@
 ---
-name: plain-api
+name: plain-support
 description: Access to Plain customer support platform. Read customers, threads, timeline, and help center content. Add notes to threads. Create, update, and publish help center articles.
 license: MIT
 compatibility: Requires curl, jq, and PLAIN_API_KEY environment variable
