@@ -1,6 +1,6 @@
 # Plain Support Skill for Claude Code
 
-A [Claude Code skill](https://docs.anthropic.com/en/docs/claude-code) that gives Claude direct access to the [Plain](https://plain.com) customer support platform via its GraphQL API.
+A [Claude Code skill](https://code.claude.com/docs/en/skills) that gives Claude direct access to the [Plain](https://plain.com) customer support platform via its GraphQL API.
 
 With this skill, Claude can read customers, threads, conversations, help center articles, and more - directly from your terminal.
 
