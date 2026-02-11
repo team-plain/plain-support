@@ -1,0 +1,8 @@
+{
+  "name": "plain-support",
+  "description": "Access to Plain customer support platform. Read customers, threads, timeline, and help center content. Add notes to threads. Create, update, and publish help center articles.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Plain"
+  }
+}

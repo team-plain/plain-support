@@ -1,8 +1,8 @@
-# Plain Support Skill for Claude Code
+# Plain Support Plugin for Claude Code
 
-A [Claude Code skill](https://code.claude.com/docs/en/skills) that gives Claude direct access to the [Plain](https://plain.com) customer support platform via its GraphQL API.
+A [Claude Code plugin](https://code.claude.com/docs/en/plugins) that gives Claude direct access to the [Plain](https://plain.com) customer support platform via its GraphQL API.
 
-With this skill, Claude can read customers, threads, conversations, help center articles, and more - directly from your terminal.
+With this plugin, Claude can read customers, threads, conversations, help center articles, and more - directly from your terminal.
 
 ## What can it do?
 
@@ -25,22 +25,34 @@ With this skill, Claude can read customers, threads, conversations, help center 
 - "Create a help center article about how to reset passwords"
 - "Which customers are in the Enterprise tier?"
 
-## Setup
+## Installation
 
-### 1. Install the skill
-
-Clone this repo into your project (or anywhere you use Claude Code):
+### Option 1: Install via npx skills
 
 ```bash
-# Option A: Clone into your project's .claude/skills directory
-git clone git@github.com:team-plain/plain-support.git .claude/skills/plain-support
-
-# Option B: Clone to a shared location and symlink
-git clone git@github.com:team-plain/plain-support.git ~/plain-support
-ln -s ~/plain-support/.claude/skills/plain-support .claude/skills/plain-support
+npx skills add team-plain/plain-support
 ```
 
-### 2. Set your API key
+### Option 2: Install as a Claude Code plugin
+
+```bash
+# Try it locally first
+claude --plugin-dir /path/to/plain-support
+
+# Or install from a marketplace that includes this plugin
+/plugin install plain-support@marketplace-name
+```
+
+### Option 3: Clone manually
+
+```bash
+git clone git@github.com:team-plain/plain-support.git
+claude --plugin-dir ./plain-support
+```
+
+## Prerequisites
+
+### API key
 
 Get an API key from your [Plain workspace settings](https://app.plain.com) and set it as an environment variable:
 
@@ -50,9 +62,9 @@ export PLAIN_API_KEY="plainApiKey_..."
 
 Add it to your shell profile (`.bashrc`, `.zshrc`, etc.) to persist across sessions.
 
-### 3. Dependencies
+### Dependencies
 
-The skill requires `curl` and `jq`, which are available on most systems:
+The plugin requires `curl` and `jq`:
 
 ```bash
 # macOS
