@@ -54,7 +54,7 @@ claude --plugin-dir ./plain-support
 
 ### API key
 
-Get an API key from your [Plain workspace settings](https://app.plain.com) and set it as an environment variable:
+In Plain, go to **Settings > Machine users & API Keys** to create an API key. Then set it as an environment variable:
 
 ```bash
 export PLAIN_API_KEY="plainApiKey_..."
