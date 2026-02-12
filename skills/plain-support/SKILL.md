@@ -51,6 +51,11 @@ scripts/plain-api.sh thread list --status all
 # List done threads
 scripts/plain-api.sh thread list --status DONE
 
+# List threads by priority
+scripts/plain-api.sh thread list --priority urgent
+scripts/plain-api.sh thread list --priority high
+scripts/plain-api.sh thread list --status TODO --priority low
+
 # Get thread details
 scripts/plain-api.sh thread get th_01ABC...
 
@@ -81,6 +86,16 @@ scripts/plain-api.sh thread note th_01ABC... --text-file /path/to/note.txt
 | `--markdown` | No | Markdown formatted version of the note |
 
 *Either `--text` or `--text-file` is required.
+
+**Thread list options:**
+| Option | Description |
+|--------|-------------|
+| `--status` | Filter by status: `TODO`, `SNOOZED`, `DONE`, or `all` |
+| `--priority` | Filter by priority: `urgent`, `high`, `normal`, `low` |
+| `--customer` | Filter by customer ID |
+| `--first` | Number of results (default: 10) |
+
+**Thread priorities:** `urgent` > `high` > `normal` (default) > `low`
 
 ### Companies (Read Only)
 

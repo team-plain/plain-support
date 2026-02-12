@@ -73,6 +73,35 @@ customer_search() {
         "{\"term\": \"$query\", \"first\": $first}"
 }
 
+# Convert priority label to number for API filters
+priority_to_number() {
+    case "$1" in
+        urgent) echo 0 ;;
+        high) echo 1 ;;
+        normal) echo 2 ;;
+        low) echo 3 ;;
+        0|1|2|3) echo "$1" ;;
+        *) echo "Error: Invalid priority '$1'. Use: urgent, high, normal, low" >&2; exit 1 ;;
+    esac
+}
+
+# Map numeric priority values (0-3) to labels in JSON output
+map_priorities() {
+    jq '
+def priority_label:
+  if . == 0 then "urgent"
+  elif . == 1 then "high"
+  elif . == 2 then "normal"
+  elif . == 3 then "low"
+  else .
+  end;
+walk(if type == "object" then
+  (if has("priority") and (.priority | type) == "number" then .priority |= priority_label else . end) |
+  (if has("previousPriority") and (.previousPriority | type) == "number" then .previousPriority |= priority_label else . end) |
+  (if has("nextPriority") and (.nextPriority | type) == "number" then .nextPriority |= priority_label else . end)
+else . end)'
+}
+
 # ============================================================================
 # THREADS (READ + WRITE)
 # ============================================================================
@@ -147,7 +176,7 @@ thread_note() {
 thread_get() {
     local id="$1"
     gql 'query($id: ID!) { thread(threadId: $id) { id title description previewText status priority externalId channel customer { id fullName email { email } } assignedTo { ... on User { id fullName } ... on MachineUser { id fullName } } labels { id labelType { id name } } createdAt { iso8601 } updatedAt { iso8601 } } }' \
-        "{\"id\": \"$id\"}"
+        "{\"id\": \"$id\"}" | map_priorities
 }
 
 thread_list() {
@@ -164,7 +193,7 @@ thread_list() {
                     status_filter="$2"
                 fi
                 shift 2 ;;
-            --priority) priority_filter="$2"; shift 2 ;;
+            --priority) priority_filter="$(priority_to_number "$2")"; shift 2 ;;
             --customer) customer_filter="$2"; shift 2 ;;
             *) shift ;;
         esac
@@ -187,7 +216,7 @@ thread_list() {
     fi
 
     gql "query(\$first: Int!, \$filters: ThreadsFilter) { threads(first: \$first, filters: \$filters) { edges { node { id title status priority customer { id fullName } assignedTo { ... on User { id fullName } ... on MachineUser { id fullName } } createdAt { iso8601 } } } pageInfo { hasNextPage endCursor } totalCount } }" \
-        "{\"first\": $first, \"filters\": $filter}"
+        "{\"first\": $first, \"filters\": $filter}" | map_priorities
 }
 
 thread_search() {
@@ -201,7 +230,7 @@ thread_search() {
         esac
     done
     gql 'query($term: String!, $first: Int!) { searchThreads(searchQuery: {term: $term}, first: $first) { edges { node { thread { id title status priority customer { id fullName } assignedTo { ... on User { id fullName } } createdAt { iso8601 } } } } } }' \
-        "{\"term\": \"$query\", \"first\": $first}"
+        "{\"term\": \"$query\", \"first\": $first}" | map_priorities
 }
 
 thread_timeline() {
@@ -523,7 +552,7 @@ thread_timeline() {
       }
     }'
 
-    gql "$query" "{\"threadId\": \"$thread_id\", \"first\": $first$after_param}"
+    gql "$query" "{\"threadId\": \"$thread_id\", \"first\": $first$after_param}" | map_priorities
 }
 
 # ============================================================================
