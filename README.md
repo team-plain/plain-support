@@ -1,8 +1,8 @@
-# Plain Support Plugin for Claude Code
+# Plain Support Plugin for Agents
 
-A [Claude Code plugin](https://code.claude.com/docs/en/plugins) that gives Claude direct access to the [Plain](https://plain.com) customer support platform via its GraphQL API.
+A [Cursor]() and [Claude Code plugin](https://code.claude.com/docs/en/plugins) that gives your agents direct access to the [Plain](https://plain.com) customer support platform via its GraphQL API.
 
-With this plugin, Claude can read customers, threads, conversations, help center articles, and more - directly from your terminal.
+With this plugin, your agent can read customers, threads, conversations, help center articles, and more - directly from your terminal.
 
 ## What can it do?
 
