@@ -9,5 +9,5 @@
   },
   "license": "MIT",
   "keywords": ["cursor", "plugin", "skills"],
-  "logo": "assets/logo.svg"
+  "logo": "./assets/logo.svg"
 }
