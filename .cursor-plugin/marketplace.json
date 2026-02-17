@@ -1,5 +1,5 @@
 {
-  "name": "Plain Skill",
+  "name": "plain-skill",
   "owner": {
     "name": "Plain",
     "email": "support@plain.com"
@@ -11,8 +11,8 @@
   },
   "plugins": [
     {
-      "name": "Plain Support Skill",
-      "source": "./skills/plain-support",
+      "name": "plain-skill",
+      "source": "../plugins/plain-support",
       "description": "Skill for interacting with your Plain workspace"
     }
   ]
