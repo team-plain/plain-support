@@ -1,0 +1,19 @@
+{
+  "name": "Plain Skill",
+  "owner": {
+    "name": "Plain",
+    "email": "support@plain.com"
+  },
+  "metadata": {
+    "description": "Interact with your Plain workspace from Cursor!",
+    "version": "0.1.0",
+    "pluginRoot": "plugins"
+  },
+  "plugins": [
+    {
+      "name": "Plain Support Skill",
+      "source": "./skills/plain-support",
+      "description": "Skill for interacting with your Plain workspace"
+    }
+  ]
+}

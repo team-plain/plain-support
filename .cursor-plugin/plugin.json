@@ -1,0 +1,13 @@
+{
+  "name": "plain-skill",
+  "displayName": "Plain Skill",
+  "version": "0.1.0",
+  "description": "Skill for interacting with your Plain workspace",
+  "author": {
+    "name": "Plain",
+    "email": "support@plain.com"
+  },
+  "license": "MIT",
+  "keywords": ["cursor", "plugin", "skills"],
+  "logo": "assets/logo.svg"
+}
