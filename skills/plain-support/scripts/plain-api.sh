@@ -25,20 +25,63 @@ gql() {
         -d "$(jq -n --arg q "$query" --argjson v "$variables" '{query: $q, variables: $v}')"
 }
 
+# Format and validate GraphQL response
+# Outputs clear messages for empty results and errors
+format_response() {
+    local response="$1"
+    local resource_type="${2:-results}"
+
+    # Check for GraphQL errors
+    local errors
+    errors=$(echo "$response" | jq -r '.errors // empty')
+    if [[ -n "$errors" ]] && [[ "$errors" != "null" ]]; then
+        echo "$response" | jq '{errors: .errors}' >&2
+        return 1
+    fi
+
+    # Check for empty data
+    local has_data
+    has_data=$(echo "$response" | jq '
+        .data // null |
+        if . == null then false
+        elif type == "object" then
+            to_entries | map(.value) | map(
+                if . == null then false
+                elif type == "object" and has("edges") then (.edges | length > 0)
+                elif type == "object" then true
+                else . != null
+                end
+            ) | any
+        else . != null
+        end
+    ')
+
+    if [[ "$has_data" == "false" ]]; then
+        echo "{\"message\": \"No $resource_type found\", \"data\": null}"
+        return 0
+    fi
+
+    echo "$response"
+}
+
 # ============================================================================
 # CUSTOMERS (READ ONLY)
 # ============================================================================
 
 customer_get() {
     local id="$1"
-    gql 'query($id: ID!) { customer(customerId: $id) { id fullName shortName email { email isVerified } externalId status company { id name } createdAt { iso8601 } updatedAt { iso8601 } } }' \
-        "{\"id\": \"$id\"}"
+    local result
+    result=$(gql 'query($id: ID!) { customer(customerId: $id) { id fullName shortName email { email isVerified } externalId status company { id name } createdAt { iso8601 } updatedAt { iso8601 } } }' \
+        "{\"id\": \"$id\"}")
+    format_response "$result" "customer"
 }
 
 customer_get_by_email() {
     local email="$1"
-    gql 'query($email: String!) { customerByEmail(email: $email) { id fullName shortName email { email isVerified } externalId status company { id name } createdAt { iso8601 } updatedAt { iso8601 } } }' \
-        "{\"email\": \"$email\"}"
+    local result
+    result=$(gql 'query($email: String!) { customerByEmail(email: $email) { id fullName shortName email { email isVerified } externalId status company { id name } createdAt { iso8601 } updatedAt { iso8601 } } }' \
+        "{\"email\": \"$email\"}")
+    format_response "$result" "customer with email '$email'"
 }
 
 customer_get_by_external_id() {
@@ -69,8 +112,10 @@ customer_search() {
             *) shift ;;
         esac
     done
-    gql 'query($term: String!, $first: Int!) { searchCustomers(searchQuery: {or: [{fullName: {caseInsensitiveContains: $term}}, {email: {caseInsensitiveContains: $term}}]}, first: $first) { edges { node { id fullName email { email } externalId status company { id name } } } } }' \
-        "{\"term\": \"$query\", \"first\": $first}"
+    local result
+    result=$(gql 'query($term: String!, $first: Int!) { searchCustomers(searchQuery: {or: [{fullName: {caseInsensitiveContains: $term}}, {email: {caseInsensitiveContains: $term}}]}, first: $first) { edges { node { id fullName email { email } externalId status company { id name } } } } }' \
+        "{\"term\": \"$query\", \"first\": $first}")
+    format_response "$result" "customers matching '$query'"
 }
 
 # Convert priority label to number for API filters
@@ -215,8 +260,10 @@ thread_list() {
         filter="{$(IFS=,; echo "${filter_parts[*]}")}"
     fi
 
-    gql "query(\$first: Int!, \$filters: ThreadsFilter) { threads(first: \$first, filters: \$filters) { edges { node { id title status priority customer { id fullName } assignedTo { ... on User { id fullName } ... on MachineUser { id fullName } } createdAt { iso8601 } } } pageInfo { hasNextPage endCursor } totalCount } }" \
-        "{\"first\": $first, \"filters\": $filter}" | map_priorities
+    local result
+    result=$(gql "query(\$first: Int!, \$filters: ThreadsFilter) { threads(first: \$first, filters: \$filters) { edges { node { id title status priority customer { id fullName } assignedTo { ... on User { id fullName } ... on MachineUser { id fullName } } createdAt { iso8601 } } } pageInfo { hasNextPage endCursor } totalCount } }" \
+        "{\"first\": $first, \"filters\": $filter}")
+    format_response "$result" "threads" | map_priorities
 }
 
 thread_search() {
@@ -229,8 +276,10 @@ thread_search() {
             *) shift ;;
         esac
     done
-    gql 'query($term: String!, $first: Int!) { searchThreads(searchQuery: {term: $term}, first: $first) { edges { node { thread { id title status priority customer { id fullName } assignedTo { ... on User { id fullName } } createdAt { iso8601 } } } } } }' \
-        "{\"term\": \"$query\", \"first\": $first}" | map_priorities
+    local result
+    result=$(gql 'query($term: String!, $first: Int!) { searchThreads(searchQuery: {term: $term}, first: $first) { edges { node { thread { id title status priority customer { id fullName } assignedTo { ... on User { id fullName } } createdAt { iso8601 } } } } } }' \
+        "{\"term\": \"$query\", \"first\": $first}")
+    format_response "$result" "threads matching '$query'" | map_priorities
 }
 
 thread_timeline() {
@@ -573,8 +622,10 @@ company_list() {
             *) shift ;;
         esac
     done
-    gql "query(\$first: Int!) { companies(first: \$first) { edges { node { id name domainName } } pageInfo { hasNextPage endCursor } } }" \
-        "{\"first\": $first}"
+    local result
+    result=$(gql "query(\$first: Int!) { companies(first: \$first) { edges { node { id name domainName } } pageInfo { hasNextPage endCursor } } }" \
+        "{\"first\": $first}")
+    format_response "$result" "companies"
 }
 
 # ============================================================================
@@ -595,8 +646,10 @@ tenant_list() {
             *) shift ;;
         esac
     done
-    gql "query(\$first: Int!) { tenants(first: \$first) { edges { node { id name externalId } } pageInfo { hasNextPage endCursor } } }" \
-        "{\"first\": $first}"
+    local result
+    result=$(gql "query(\$first: Int!) { tenants(first: \$first) { edges { node { id name externalId } } pageInfo { hasNextPage endCursor } } }" \
+        "{\"first\": $first}")
+    format_response "$result" "tenants"
 }
 
 # ============================================================================
