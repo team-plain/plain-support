@@ -11,10 +11,6 @@ check_deps() {
     command -v curl >/dev/null 2>&1 || { echo "Error: curl is required" >&2; exit 1; }
     command -v jq >/dev/null 2>&1 || { echo "Error: jq is required" >&2; exit 1; }
     [ -n "${PLAIN_API_KEY:-}" ] || { echo "Error: PLAIN_API_KEY environment variable is required" >&2; exit 1; }
-    # Warn if API key looks like an unresolved secret reference
-    if [[ "${PLAIN_API_KEY}" == CCASECRET_* ]] || [[ "${PLAIN_API_KEY}" == *SECRET_* ]] || [[ ${#PLAIN_API_KEY} -lt 20 ]]; then
-        echo "Warning: PLAIN_API_KEY appears invalid (may be an unresolved secret reference or too short)" >&2
-    fi
 }
 
 # Execute GraphQL query
