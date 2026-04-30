@@ -97,6 +97,33 @@ scripts/plain-api.sh thread note th_01ABC... --text-file /path/to/note.txt
 
 **Thread priorities:** `urgent` > `high` > `normal` (default) > `low`
 
+### Thread Links (Read + Write)
+
+Attach external issues (GitHub, etc.) to a thread. Plain fetches title, URL, description, and status from the integration server-side — only the ref is needed.
+
+```bash
+# Add a GitHub issue or PR — accepts URL, shorthand, or canonical sourceId
+scripts/plain-api.sh thread link add th_01ABC... https://github.com/owner/repo/issues/45
+scripts/plain-api.sh thread link add th_01ABC... https://github.com/owner/repo/pull/45
+scripts/plain-api.sh thread link add th_01ABC... owner/repo#45
+scripts/plain-api.sh thread link add th_01ABC... owner/repo/45
+
+# List links on a thread
+scripts/plain-api.sh thread link list th_01ABC...
+```
+
+**Thread link add options:**
+| Option | Required | Description |
+|--------|----------|-------------|
+| `<thread_id>` | Yes | Thread to attach the link to |
+| `<ref>` | Yes | GitHub URL, `owner/repo#N`, or `owner/repo/N` |
+| `--source` | No | Source type (default: `github_issue`). Other values: `shortcut_issue`, `rootly_incident`, `incidentio_incident` — for these, pass the integration's native sourceId as `<ref>` |
+
+**Notes:**
+- The workspace must have the relevant integration configured (e.g., GitHub) for Plain to resolve metadata. If not, the `add` call returns an error.
+- Removing links is not supported via API key — delete from the Plain UI.
+- Plain does not expose `searchThreadLinkCandidates` to machine users, so the agent must supply the ref directly (parse from a URL the customer pasted, etc.).
+
 ### Companies (Read Only)
 
 ```bash
