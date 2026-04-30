@@ -555,6 +555,88 @@ thread_timeline() {
     gql "$query" "{\"threadId\": \"$thread_id\", \"first\": $first$after_param}" | map_priorities
 }
 
+# Parse a GitHub issue/PR ref into Plain's canonical sourceId "owner/repo/N".
+# Accepts: https://github.com/owner/repo/{issues,pull}/N, owner/repo#N, owner/repo/N
+parse_github_ref() {
+    local ref="$1"
+    if [[ "$ref" =~ ^https?://github\.com/([^/]+)/([^/]+)/(issues|pull)/([0-9]+) ]]; then
+        echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/${BASH_REMATCH[4]}"
+        return 0
+    fi
+    if [[ "$ref" =~ ^([^/]+)/([^/]+)#([0-9]+)$ ]]; then
+        echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/${BASH_REMATCH[3]}"
+        return 0
+    fi
+    if [[ "$ref" =~ ^([^/]+)/([^/]+)/([0-9]+)$ ]]; then
+        echo "$ref"
+        return 0
+    fi
+    return 1
+}
+
+thread_link_add() {
+    local thread_id=""
+    local ref=""
+    local source="github_issue"
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --source) source="$2"; shift 2 ;;
+            '') shift ;;
+            *)
+                if [[ -z "$thread_id" ]]; then thread_id="$1"
+                else ref="$1"
+                fi
+                shift ;;
+        esac
+    done
+
+    if [[ -z "$thread_id" ]] || [[ -z "$ref" ]]; then
+        echo "Error: thread_id and ref are required" >&2
+        echo "Usage: plain-api.sh thread link add <thread_id> <ref> [--source github_issue]" >&2
+        echo "  ref formats (github_issue): https://github.com/owner/repo/issues/N, owner/repo#N, owner/repo/N" >&2
+        exit 1
+    fi
+
+    local source_id
+    if [[ "$source" == "github_issue" ]]; then
+        if ! source_id=$(parse_github_ref "$ref"); then
+            echo "Error: invalid GitHub ref '$ref'" >&2
+            echo "  Expected: https://github.com/owner/repo/issues/N, owner/repo#N, or owner/repo/N" >&2
+            exit 1
+        fi
+    else
+        source_id="$ref"
+    fi
+
+    local input
+    input=$(jq -n \
+        --arg threadId "$thread_id" \
+        --arg sourceId "$source_id" \
+        --arg sourceType "$source" \
+        '{threadId: $threadId, sourceId: $sourceId, sourceType: $sourceType}')
+
+    local query='mutation($input: CreateThreadLinkInput!) { createThreadLink(input: $input) { threadLink { id sourceType sourceId title url description status linkType createdAt { iso8601 } } error { message code fields { field message type } } } }'
+    local variables
+    variables=$(jq -n --argjson input "$input" '{input: $input}')
+
+    curl -s -X POST "$API_URL" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $PLAIN_API_KEY" \
+        -d "$(jq -n --arg q "$query" --argjson v "$variables" '{query: $q, variables: $v}')"
+}
+
+thread_link_list() {
+    local thread_id="$1"
+    if [[ -z "$thread_id" ]]; then
+        echo "Error: thread_id is required" >&2
+        echo "Usage: plain-api.sh thread link list <thread_id>" >&2
+        exit 1
+    fi
+    gql 'query($id: ID!) { thread(threadId: $id) { links(first: 50) { edges { node { id sourceType sourceId title url description status linkType createdAt { iso8601 } } } } } }' \
+        "{\"id\": \"$thread_id\"}"
+}
+
 # ============================================================================
 # COMPANIES (READ ONLY)
 # ============================================================================
@@ -864,6 +946,10 @@ EXAMPLES:
   plain-api.sh thread timeline th_123 --first 50
   plain-api.sh thread note th_123 --text "Internal note content"
 
+  plain-api.sh thread link add th_123 https://github.com/owner/repo/issues/45
+  plain-api.sh thread link add th_123 owner/repo#45
+  plain-api.sh thread link list th_123
+
   plain-api.sh helpcenter list
   plain-api.sh helpcenter articles hc_123 --first 10
   plain-api.sh helpcenter article upsert hc_123 --title "Title" --content "<p>HTML</p>"
@@ -916,6 +1002,15 @@ main() {
                 search) thread_search "$@" ;;
                 timeline) thread_timeline "$@" ;;
                 note) thread_note "$@" ;;
+                link)
+                    local sub_action="${1:-list}"
+                    shift || true
+                    case "$sub_action" in
+                        add) thread_link_add "$@" ;;
+                        list) thread_link_list "$@" ;;
+                        *) echo "Unknown link action: $sub_action" >&2; exit 1 ;;
+                    esac
+                    ;;
                 *) echo "Unknown thread action: $action" >&2; exit 1 ;;
             esac
             ;;
